@@ -1,0 +1,42 @@
+version: '3.5'
+services:
+  spice-web:
+    image: ${IMAGE_NAME}:${TAG}
+    env_file: 
+      - env/${ENVIRONMENT_TYPE}.env
+    container_name: ${CONTAINER_NAME}
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      # the port inside the container    
+    - target: 8080
+      # published: the publicly exposed port
+      published: 2888
+      # protocol: the port protocol (tcp or udp)  
+      protocol: tcp
+      #mode: host for publishing a host port on each node, or ingress for a swarm mode port to be load balanced.  
+      mode: host
+      # the port inside the container for Tomcat Debugging
+    #- target: 8000
+      # published: the publicly exposed port  for Tomcat Debugging
+      #published: 2889
+      # protocol: the port protocol (tcp or udp)  
+      #protocol: tcp
+      #mode: host for publishing a host port on each node, or ingress for a swarm mode port to be load balanced.  
+      #mode: host      
+    #ports:
+    # - "2888:8080"
+    restart: on-failure
+    #healthcheck:
+    #  test: ["CMD", "curl", "-f", "http://localhost:8080/idp/health-checks"]
+      # The health check will first run interval seconds after the container is started
+    #  interval: 10s
+      # If a single run of the check takes longer than timeout seconds then the check is considered to have failed
+    #  timeout: 10s
+      #Retry consecutive failures of the health check for the container to be considered unhealthy
+    #  retries: 3
+      #start period provides initialization time for containers that need time to bootstrap
+    #  start_period: 20s
