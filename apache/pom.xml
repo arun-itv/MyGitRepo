@@ -1,0 +1,127 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.abc.def</groupId>
+        <artifactId>myaws-poc</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>apache</artifactId>
+    <name>Apache Image</name>
+    <properties>
+        <!-- Directory that holds Docker file and static content necessary to build 
+            the Docker image. -->
+        <docker.image.src.root>src/main/docker</docker.image.src.root>
+        <!--Directory to which the Docker image artifacts and the Docker file will 
+            be copied to and which will serve as the root directory when building the 
+            Docker image. -->
+        <docker.build.directory>${project.build.directory}</docker.build.directory>
+        <baseimage>123456789.dkr.ecr.us-east-1.amazonaws.com/web/web-httpd-webgate</baseimage>
+        <baseimage.version>1.0.0</baseimage.version>
+        <dockerfile.maven.plugin.version>1.4.13</dockerfile.maven.plugin.version>
+    </properties>
+    <build>
+        <plugins>
+            <!--Copy the directory containing static content (idp-spice-web-1.0-SNAPSHOT.tar) from idp-spice-web/target to idp-spice-apache/src/main/docker/htdocs -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                         <id>copy-static-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/src/main/docker</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.parent.basedir}/idp-spice-web/target</directory>
+                                    <includes>
+                                    <include>idp-spice-web-${project.version}.tar</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                     <execution>
+                        <id>copy-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${docker.build.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${docker.image.src.root}</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+<!--             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${maven.antrun.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepareuntar</id>
+                        <phase>validate</phase>
+                        <configuration>
+                            <tasks>
+                                <untar src="${project.basedir}/src/main/docker/htdocs/idp-spice-web-${project.version}.tar" dest="${project.basedir}/src/main/docker/htdocs/"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        </execution>
+                    <execution>
+                        <id>preparedelete</id>
+                        <phase>validate</phase>
+                        <configuration>
+                            <tasks>
+                                <delete>
+                                    <fileset dir="${project.basedir}/src/main/docker/htdocs/" includes="idp-spice-web-${project.version}.tar" />
+                                </delete>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin> -->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>${dockerfile.maven.plugin.version}</version>
+                <configuration>
+                    <skip>false</skip>
+                    <pullNewerImage>false</pullNewerImage>
+                    <!-- <contextDirectory>${project.build.directory}</contextDirectory>
+                    <verbose>true</verbose>
+                    <dockerDirectory>${project.build.directory}/docker</dockerDirectory>
+                    <repository>${private.registry.url}/${project.artifactId}</repository>
+                    <pullNewerImage>false</pullNewerImage>
+                    <retryCount>0</retryCount>
+                    <tag>${project.version}</tag> -->
+                    <buildArgs>
+                        <BASEIMAGE>${baseimage}</BASEIMAGE>
+                        <BASEIMAGEVERSION>${baseimage.version}</BASEIMAGEVERSION>
+                        <HTTPDUSER>${HTTPDUSER}</HTTPDUSER>
+                        <SERVERROOT>${SERVERROOT}</SERVERROOT>
+                        <DOCUMENTROOT>${DOCUMENTROOT}</DOCUMENTROOT>
+                        <HTTPPORT>${HTTPPORT}</HTTPPORT>
+                        <HTTPSPORT>${HTTPSPORT}</HTTPSPORT>
+                        <HTTPD_INSTANCE_LOCATION>${HTTPD_INSTANCE_LOCATION}</HTTPD_INSTANCE_LOCATION>
+                    </buildArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

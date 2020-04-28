@@ -1,0 +1,60 @@
+version: '3.5'
+services:
+  apache:
+    image: ${IMAGE_NAME}:${TAG}
+    env_file: 
+      - env/${ENVIRONMENT_TYPE}.env
+    container_name: ${CONTAINER_NAME}
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BASEIMAGE=${BASEIMAGE}
+        - BASEIMAGEVERSION=${BASEIMAGEVERSION}
+        - HTTPDUSER=${HTTPDUSER}
+        - SERVERROOT=${APACHE_SERVER_ROOT}
+        - DOCUMENTROOT=${APACHE_DOCUMENT_ROOT}
+        - HTTPPORT=${APACHE_PORT}
+        - HTTPSPORT=${APACHE_SSL_PORT}
+        - HTTPD_INSTANCE_LOCATION=${HTTPD_INSTANCE_LOCATION}
+        - HEALTHCHECKPORT=${APACHE_HEALTHCHECK_PORT}
+        #- ENVIRONMENT=${ENVIRONMENT}
+    ports:
+      # the port inside the container    
+      - target: 8080
+      # published: the publicly exposed port
+        published: 2333
+      # protocol: the port protocol (tcp or udp)  
+        protocol: tcp
+      #mode: host for publishing a host port on each node, or ingress for a swarm mode port to be load balanced.  
+        mode: host
+      # the port inside the container    
+      - target: 8081
+      # published: the publicly exposed port
+        published: 4443
+      # protocol: the port protocol (tcp or udp)  
+        protocol: tcp
+      #mode: host for publishing a host port on each node, or ingress for a swarm mode port to be load balanced.  
+        mode: host        
+    #ports:
+    # - "80:80"
+    # - "443:443"  
+    restart: always
+    #volumes:
+    #   - type: bind
+    #     source: ${ASSETS_SOFTLINK_SOURCE}
+    #     target: ${ASSETS_SOFTLINK_DESTINATION}
+    #     read_only: true
+       #- ${ASSETS_SOFTLINK_SOURCE}:${ASSETS_SOFTLINK_DESTINATION}:ro
+    #healthcheck:
+    #   test: ["CMD", "curl", "--insecure", "http://localhost:8081/server-status"]
+    # The health check will first run interval seconds after the container is started
+    #   interval: 10s
+    # If a single run of the check takes longer than timeout seconds then the check is considered to have failed
+    #   timeout: 10s
+    #Retry consecutive failures of the health check for the container to be considered unhealthy
+    #   retries: 3
+    #start period provides initialization time for containers that need time to bootstrap
+    #   start_period: 10s
